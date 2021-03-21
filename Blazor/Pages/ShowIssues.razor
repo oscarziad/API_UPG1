@@ -1,0 +1,151 @@
+﻿@page "/showIssues"
+@inject HttpClient Http
+<Auth />
+
+<h1 class="text-center">Issues</h1>
+<p>This is all the issues</p>
+
+<div class="border">
+    <p class="p-1">Filters:</p>
+    <div class="form-row">
+        <div class="col p-3">
+            <select class="form-control mb-2" @bind="status" @onselect='(() => GetStatus(status))'>
+                <option selected disabled value="-1">Get status:</option>
+                <option value="Active"> Status: Active</option>
+                <option value="OnGoing"> Status: Ongoing</option>
+                <option value="Closed"> Status: Closed</option>
+            </select>
+            <button class="form-control" @onclick='(() => GetStatus(status))'>Show status</button>
+        </div>
+        <div class="col p-3">
+            <input class="form-control mb-2" @bind="customerid" />
+            <button class="form-control" @onclick='(() => GetCustomerId(customerid))'>Get Customer Id</button>
+        </div>
+        <div class="col p-3">
+            <button class="form-control mb-2" @onclick="GetDates">Sort by date</button>
+            <button class="form-control" @onclick='(() => OnInitializedAsync())'>Show all</button>
+        </div>
+    </div>
+</div>
+
+@if (issues == null)
+{
+    <p>No issues found</p>
+}
+else
+{
+    <div class="col-4 p-3" hidden="@IsShow">
+        <p class="border p-1">@IdPlaceholder</p>
+        <p class="border p-1">@customerIdPlaceholder</p>
+        <p class="border p-1">@UserIdPlaceholder</p>
+        <p class="border p-1">@IssueDatePlaceholder</p>
+        <p class="border p-1">@UpdateDatePlaceholder</p>
+        <select class="form-control mb-2" @bind="StatusPlaceholder">
+            <option value="Active">Active</option>
+            <option value="OnGoing">Ongoing</option>
+            <option value="Closed">Closed</option>
+        </select>
+        <button class="form-control" @onclick='(() => UpdateIssue())'>Update</button>
+    </div>
+
+    <table class="table" style="margin-top: 50px">
+        <tr>
+            <th>Customer Id</th>
+            <th>User Id</th>
+            <th>Issue Dater</th>
+            <th>Update Date</th>
+            <th>Issue Status</th>
+        </tr>
+
+        @foreach (var issue in issues)
+        {
+            <tr>
+                <td>@issue.CustomerId</td>
+                <td>@issue.UserId</td>
+                <td>@issue.IssueDate</td>
+                <td>@issue.UpdateDate</td>
+                <td>@issue.IssueStatus</td>
+                <td><button class="btn-success" @onclick='(() => FetchUpdateData(issue))'>Update</button></td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    private IEnumerable<Issue> issues;
+    private Issue fetchedIssue;
+    string status;
+    int customerid;
+    private bool IsShow { get; set; } = true;
+
+    int IdPlaceholder;
+    int customerIdPlaceholder;
+    int UserIdPlaceholder;
+    DateTime IssueDatePlaceholder;
+    DateTime UpdateDatePlaceholder;
+    string StatusPlaceholder;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        issues = await Http.GetFromJsonAsync<IEnumerable<Issue>>("https://localhost:44338/api/Issues");
+    }
+    async Task GetStatus(string status)
+    {
+        issues = await Http.GetFromJsonAsync<IEnumerable<Issue>>($"https://localhost:44338/api/Issues/status?i={status}");
+    }
+    async Task GetDates()
+    {
+        issues = await Http.GetFromJsonAsync<IEnumerable<Issue>>("https://localhost:44338/api/Issues/dates");
+    }
+
+    async Task GetCustomerId(int customerid)
+    {
+        issues = await Http.GetFromJsonAsync<IEnumerable<Issue>>($"https://localhost:44338/api/Issues/customerid?i={customerid}");
+    }
+
+
+    private void FetchUpdateData(Issue test)
+    {
+        fetchedIssue = test;
+        IsShow = false;
+
+        IdPlaceholder = test.Id;
+        customerIdPlaceholder = test.CustomerId;
+        UserIdPlaceholder = test.UserId;
+        IssueDatePlaceholder = test.IssueDate;
+        UpdateDatePlaceholder = test.UpdateDate;
+        StatusPlaceholder = test.IssueStatus;
+    }
+    private async Task UpdateIssue()
+    {
+        fetchedIssue.Id = IdPlaceholder;
+        fetchedIssue.CustomerId = customerIdPlaceholder;
+        fetchedIssue.UserId = UserIdPlaceholder;
+        fetchedIssue.IssueDate = IssueDatePlaceholder;
+        fetchedIssue.UpdateDate = DateTime.Now;
+        fetchedIssue.IssueStatus = StatusPlaceholder;
+
+        Console.WriteLine(fetchedIssue);
+
+        await Http.PutAsJsonAsync<Issue>($"https://localhost:44338/api/Issues/update?id={fetchedIssue.Id}", fetchedIssue);
+        fetchedIssue = new Issue();
+        IsShow = true;
+    }
+
+    protected override void OnInitialized()
+    {
+        fetchedIssue = new Issue();
+    }
+
+    public class Issue
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int CustomerId { get; set; }
+        public DateTime IssueDate { get; set; }
+        public DateTime UpdateDate { get; set; }
+        public string IssueStatus { get; set; }
+    }
+}

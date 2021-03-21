@@ -1,0 +1,43 @@
+﻿@page "/loginfailed"
+
+@inject HttpClient Http
+
+<h1>Login</h1>
+
+<p>
+    Failed to login, try again.
+</p>
+<EditForm Model="model" OnSubmit="OnSubmit">
+    <InputText type="text" id="email" @bind-Value="model.Email" />
+    <InputText type="password" id="password" @bind-Value="model.Password" />
+    <button class="btn btn-success" type="submit">Sign in</button>
+</EditForm>
+
+@code {
+    private LoginModel model { get; set; }
+
+    protected override void OnInitialized()
+    {
+        model = new LoginModel();
+    }
+
+    private async Task OnSubmit()
+    {
+        var response = await Http.PostAsJsonAsync<LoginModel>("https://localhost:44338/api/Users/login", model);
+
+        if (await response.Content.ReadAsStringAsync() != "nologin")
+        {
+            await sessionStorage.SetItemAsync<string>("auth", await response.Content.ReadAsStringAsync());
+            NavManager.NavigateTo("/");
+        }
+        else
+            NavManager.NavigateTo("/loginfailed");
+    }
+
+
+    public class LoginModel
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+}

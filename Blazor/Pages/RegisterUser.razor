@@ -1,0 +1,47 @@
+﻿@page "/registeruser"
+@inject HttpClient Http
+
+
+<h1>Add User</h1>
+<p>This component demonstrates sending data to a webapi.</p>
+
+<EditForm Model="@user" OnSubmit="@CreateUserAsync">
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="First Name" @bind="user.FirstName" required />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="Last Name" @bind="user.LastName" required />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="Email" @bind="user.Email" />
+    </div>
+    <div class="form-group">
+        <input type="password" class="form-control" placeholder="Password" @bind="user.Password" required />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-success">Add user</button>
+    </div>
+</EditForm>
+
+@code {
+    private RegUser user;
+
+    private async Task CreateUserAsync()
+    {
+        await Http.PostAsJsonAsync<RegUser>("https://localhost:44338/api/Users/signup", user);
+        user = new RegUser();
+    }
+
+    protected override void OnInitialized()
+    {
+        user = new RegUser();
+    }
+
+    public class RegUser
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+}

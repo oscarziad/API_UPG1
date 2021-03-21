@@ -1,0 +1,60 @@
+﻿@page "/registerissue"
+@inject HttpClient Http
+<Auth />
+
+<h1>Add Issue</h1>
+<p>This component demonstrates sending data to a webapi.</p>
+
+<EditForm Model="@issue" OnSubmit="@CreateIssueAsync">
+    <div class="form-group">
+        <label>Customer Id</label>
+        <input type="text" class="form-control" placeholder="CustomerId" @bind="issue.CustomerId" required />
+    </div>
+    <div class="form-group">
+        <label>User Id</label>
+        <input type="text" class="form-control" placeholder="UserId" @bind="issue.UserId" required />
+    </div>
+    @*<div class="form-group">
+        <input type="text" class="form-control" placeholder="Issue Date" @bind="issue.IssueDate" />
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="Update Date" @bind="issue.UpdateDate" required />
+    </div>*@
+    <div class="form-group">
+        <select @bind="issue.IssueStatus">
+            <option value="Active">Active</option>
+            <option value="OnGoing">Ongoing</option>
+            <option value="Closed">Closed</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <button type="submit" class="btn btn-success">Register Issue</button>
+    </div>
+</EditForm>
+
+@code {
+    private RegIssue issue;
+
+    private async Task CreateIssueAsync()
+    {
+        var test =
+        await Http.PostAsJsonAsync<RegIssue>("https://localhost:44338/api/Issues/register", issue);
+        issue = new RegIssue();
+    }
+
+    protected override void OnInitialized()
+    {
+        issue = new RegIssue();
+    }
+
+    public class RegIssue
+    {
+        public int CustomerId { get; set; }
+        public int UserId { get; set; }
+        //public DateTime IssueDate { get; set; }
+        //public DateTime UpdateDate { get; set; }
+        public string IssueStatus { get; set; }
+
+    }
+}
